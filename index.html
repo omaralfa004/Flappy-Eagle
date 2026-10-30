@@ -28,6 +28,12 @@
   html, body { margin: 0; height: 100%; background: #3B2616; overflow: hidden; overscroll-behavior: none; }
   body { display: grid; place-items: center; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
   #wrap { position: relative; width: calc(var(--u) * 180); height: calc(var(--u) * 320); }
+  /* tall phones: the scene continues past the canvas, sky above and brick walk below */
+  #above, #below { position: absolute; left: 0; right: 0; height: 100vh; display: none; }
+  #above { bottom: 100%; }
+  #below { top: 100%; background-repeat: repeat; image-rendering: pixelated; }
+  .tall #above, .tall #below { display: block; }
+  .lossfill #above, .lossfill #below { background: var(--lossbg) !important; } /* loss screens fill the whole screen */
   #game { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -105,6 +111,8 @@
 </head>
 <body>
 <div id="wrap">
+  <div id="above" aria-hidden="true"></div>
+  <div id="below" aria-hidden="true"></div>
   <canvas id="game" width="180" height="320" role="img" aria-label="Flappy Eagle game"></canvas>
   <canvas id="lossArt" role="img" hidden></canvas>
   <div id="ui">

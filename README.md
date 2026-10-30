@@ -105,7 +105,7 @@ The art is drawn at 2 art pixels per game pixel on its own canvas, which keeps t
 - **iPhone.** Safari on iPhone does not let web pages go full screen. There, the button shows a short tip instead: tap **Share**, then **Add to Home Screen**. The game then opens from its own home-screen icon with no browser bar, and the button is not needed. A web app manifest and icons set this up, and the same install works on Android.
 - **Touch handling.** Input is on `pointerdown`, so taps register immediately. Double-tap zoom, pull-to-refresh, text selection and long-press menus are disabled on the game. The scrolling menu screens still scroll.
 - **Name boxes** use at least a 16 px font, so iPhone Safari does not zoom in when one is tapped.
-- **Scaling.** The game renders at 180×320 game pixels and scales up by a whole number whenever the screen allows it, so pixels stay crisp. On screens too small for 2×, it scales to fit.
+- **Scaling.** The game renders at 180×320 game pixels. On screens taller than 9:16, which covers most modern phones, it fills the full width and the scene continues past the game area: sky above, brick walk below, or a loss screen's color on loss screens. Wider screens, like desktops and tablets, scale by a whole number when there's room, so pixels stay perfectly even, and show a frame around the game.
 - **Frame rate.** Physics runs at a fixed 60 steps per second, so the game feels the same on 60 Hz and 120 Hz screens.
 
 ---

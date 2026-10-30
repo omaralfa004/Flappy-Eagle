@@ -430,6 +430,8 @@ function lossBox(L) {
 function showLossArt(L) {
   const el = $('lossArt');
   $('endUI').classList.toggle('on-dark', !!L && L.dark);
+  document.documentElement.classList.toggle('lossfill', !!L);
+  if (L) document.documentElement.style.setProperty('--lossbg', L.bg);
   if (!L) { if (!el.hidden) el.hidden = true; return; }
   if (el.getAttribute('aria-label') !== L.alt) {
     const b = lossBox(L);
@@ -574,9 +576,19 @@ document.addEventListener('fullscreenchange', syncFs);
 document.addEventListener('webkitfullscreenchange', syncFs);
 
 // Fit the 180x320 game to the window, using whole-number scaling when there's room.
+// Screens taller than 9:16 (most modern phones) fill the width exactly and extend the scene into the
+// space above and below; everything else keeps whole-number scaling with a frame.
+const sky = S.background.getContext('2d').getImageData(0, 0, 1, 1).data;
+$('above').style.background = `rgb(${sky[0]},${sky[1]},${sky[2]})`;
+const brick = S.canvas(S.W, S.GROUND_H - 8); // brick courses only: 8 rows of 6px, tiles vertically
+brick.getContext('2d').drawImage(S.ground, 0, -8);
+$('below').style.backgroundImage = `url(${brick.toDataURL()})`;
 function fit() {
-  const s = Math.min(innerWidth / S.W, innerHeight / S.H);
-  document.documentElement.style.setProperty('--u', (s >= 2 ? Math.floor(s) : s) + 'px');
+  const tall = innerHeight / innerWidth > S.H / S.W;
+  const s = tall ? innerWidth / S.W : Math.min(innerWidth / S.W, innerHeight / S.H);
+  document.documentElement.classList.toggle('tall', tall);
+  document.documentElement.style.setProperty('--u', (s >= 2 && !tall ? Math.floor(s) : s) + 'px');
+  $('below').style.backgroundSize = `calc(var(--u) * ${S.W}) calc(var(--u) * ${brick.height})`;
 }
 addEventListener('resize', fit);
 fit();
