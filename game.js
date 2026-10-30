@@ -147,6 +147,7 @@ function addPlayer(focus = true) {
 }
 
 function renderCards() {
+  $('cards').querySelectorAll('input').forEach(saveName); // keep anything typed before the boxes are rebuilt
   const add = $('addPlayer');
   $('cards').innerHTML = match.players.map((p, i) => `
     <div class="card">
@@ -528,19 +529,25 @@ $('soloBtn').onclick = $('overSolo').onclick = () => { game.mode = 'solo'; toRea
 $('multiBtn').onclick = $('overMulti').onclick = openSetup;
 $('homeBtn').onclick = goTitle;
 $('addPlayer').onclick = () => addPlayer();
-$('cards').addEventListener('input', e => {
-  const i = +e.target.dataset.i, clean = cleanName(e.target.value);
-  if (clean !== e.target.value) e.target.value = clean;
-  match.players[i].name = clean.trim();
-});
+// Phone keyboards compose words before committing them; rewriting the box mid-composition can make
+// the keyboard drop or overwrite the text, so clean up only once a word is committed.
+function saveName(input) {
+  const clean = cleanName(input.value);
+  if (clean !== input.value) input.value = clean;
+  match.players[+input.dataset.i].name = clean.trim();
+}
+$('cards').addEventListener('input', e => { if (e.target.matches('input') && !e.isComposing) saveName(e.target); });
+$('cards').addEventListener('compositionend', e => { if (e.target.matches('input')) saveName(e.target); });
+$('cards').addEventListener('change', e => { if (e.target.matches('input')) saveName(e.target); });
+const saveAllNames = () => $('cards').querySelectorAll('input').forEach(saveName);
 $('cards').addEventListener('keydown', e => { // Enter moves to the next name box
   if (e.key !== 'Enter' || !e.target.matches('input')) return;
   e.preventDefault();
   const next = $('cards').querySelectorAll('input')[+e.target.dataset.i + 1];
   (next || $('setupNext')).focus();
 });
-$('setupBack').onclick = goTitle;
-$('setupNext').onclick = () => { game.state = 'order'; showScreen('orderUI'); };
+$('setupBack').onclick = () => { saveAllNames(); goTitle(); };
+$('setupNext').onclick = () => { saveAllNames(); game.state = 'order'; showScreen('orderUI'); };
 $('orderBack').onclick = openSetup;
 $('orderStandard').onclick = () => chooseOrder('standard');
 $('orderRandom').onclick = () => chooseOrder('random');
