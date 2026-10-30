@@ -1,6 +1,8 @@
 # Flappy Eagle
 
-A Boston College themed one-tap flyer for the browser. Guide the eagle through the gaps between Gasson Hall spires over the Quad, alone or in a pass-the-phone match for up to 10 players.
+A Boston College themed one-tap flyer you play in the browser, on phones or computers. Guide the eagle through the gaps between Gasson Hall spires over the Quad, alone or in a pass-the-phone match for up to 10 players.
+
+**▶ Play now: [flappyeaglegame.netlify.app](https://flappyeaglegame.netlify.app)**
 
 ![Title screen, gameplay and the random-order wheel](docs/screens.png)
 
@@ -27,7 +29,16 @@ It is plain HTML, CSS and JavaScript: no build step, no dependencies, no framewo
 
 ## Play it
 
-Flappy Eagle is a static site: no build step, no server code. It is deployed on [Netlify](https://www.netlify.com/).
+Open **<https://flappyeaglegame.netlify.app>** in any modern browser. Nothing to download or install.
+
+- **Phones:** portrait works best. The game fills the screen; tap the button in the bottom-left corner for full screen (see [On phones and tablets](#on-phones-and-tablets)).
+- **iPhone:** for a full-screen, app-like version, tap **Share → Add to Home Screen**, then open Flappy Eagle from its icon.
+- **Computers:** click or press Space to flap.
+- **Multiplayer** is pass-the-phone: everyone plays on the same device.
+
+### Deploying your own copy
+
+The game is a static site (no build step, no server code) hosted on [Netlify](https://www.netlify.com/), which redeploys it automatically on every push to `main`.
 
 **Deploy from GitHub (recommended)**
 
@@ -127,7 +138,7 @@ netlify.toml            Netlify deploy settings (publish the repository root, no
 index.html              Page, CSS and the HTML menus laid over the canvas
 game.js                 Game loop, physics, menus, multiplayer, wheel, loss screens, full screen
 sprites.js              All procedural pixel art, the bitmap font and UI pieces
-sprites.html            Sprite review sheet (open via the local server)
+sprites.html            Sprite review sheet (open /sprites.html on the deployed site)
 manifest.webmanifest    Home-screen install settings
 icons/                  App icons (180, 192 and 512 px)
 Loss screen renders/    The five loss-screen sprites the game loads
