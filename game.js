@@ -583,10 +583,8 @@ document.addEventListener('fullscreenchange', syncFs);
 document.addEventListener('webkitfullscreenchange', syncFs);
 
 // Fit the 180x320 game to the window, using whole-number scaling when there's room.
-// Screens taller than 9:16 (most modern phones) fill the width exactly and extend the scene into the
-// space above and below; everything else keeps whole-number scaling with a frame.
-const sky = S.background.getContext('2d').getImageData(0, 0, 1, 1).data;
-$('above').style.background = `rgb(${sky[0]},${sky[1]},${sky[2]})`;
+// Screens taller than 9:16 (most modern phones) fill the width exactly, sit at the top edge and extend
+// the brick walk below; everything else keeps whole-number scaling with a frame.
 const brick = S.canvas(S.W, S.GROUND_H - 8); // brick courses only: 8 rows of 6px, tiles vertically
 brick.getContext('2d').drawImage(S.ground, 0, -8);
 $('below').style.backgroundImage = `url(${brick.toDataURL()})`;
