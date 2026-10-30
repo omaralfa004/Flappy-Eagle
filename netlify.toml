@@ -1,0 +1,4 @@
+# Static site: nothing to build, publish the repository root as is.
+[build]
+  publish = "."
+  command = ""

@@ -27,29 +27,19 @@ It is plain HTML, CSS and JavaScript: no build step, no dependencies, no framewo
 
 ## Play it
 
-The game must be served over HTTP. Opening `index.html` straight from disk (`file://`) blocks the loss-screen images.
+Flappy Eagle is a static site: no build step, no server code. It is deployed on [Netlify](https://www.netlify.com/).
 
-**On your computer**
+**Deploy from GitHub (recommended)**
 
-```bash
-git clone https://github.com/omaralfa004/Flappy-Eagle.git
-cd Flappy-Eagle
-python3 -m http.server 8123
-```
+1. In Netlify, choose **Add new site → Import an existing project → GitHub**, and pick this repository.
+2. Leave the build command empty. `netlify.toml` already sets the publish directory to the repository root.
+3. Deploy. Every push to `main` redeploys automatically.
 
-Then open <http://localhost:8123>. Any static file server works in place of Python, for example `npx serve`.
+Deploying from the repository publishes only the files committed here, so local source renders (ignored by `.gitignore`) never reach the site.
 
-**On a phone on the same Wi-Fi**
+**Drag and drop.** You can also drag a folder onto Netlify's **Sites** page. Use a fresh clone of this repository rather than a working folder, so only the game's files are uploaded.
 
-```bash
-python3 -m http.server 8123 --bind 0.0.0.0
-```
-
-Find your computer's local IP address (on a Mac: `ipconfig getifaddr en0`) and open `http://<that-address>:8123` on the phone.
-
-**Hosting it online.** Because it is a static site, it can be hosted with GitHub Pages: in the repository go to **Settings → Pages**, choose **Deploy from a branch**, pick `main` and `/ (root)`, and save. The game then runs at `https://<user>.github.io/Flappy-Eagle/`.
-
-The pixel font for the menus loads from Google Fonts. Offline, menus fall back to the system monospace font and everything else still works.
+The game needs to be served over HTTP or HTTPS; opening `index.html` straight from disk blocks the loss-screen images. The menu font loads from Google Fonts. Without it, menus fall back to the system monospace font and everything else still works.
 
 ---
 
@@ -133,6 +123,7 @@ The art is drawn at 2 art pixels per game pixel on its own canvas, which keeps t
 ## Project structure
 
 ```
+netlify.toml            Netlify deploy settings (publish the repository root, no build)
 index.html              Page, CSS and the HTML menus laid over the canvas
 game.js                 Game loop, physics, menus, multiplayer, wheel, loss screens, full screen
 sprites.js              All procedural pixel art, the bitmap font and UI pieces
