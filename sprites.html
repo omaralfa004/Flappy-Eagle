@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flappy Eagle Sprites</title>
+<style>
+  :root { --ink: #2B1B12; --maroon: #8C2232; --gold: #DBCCA4; --cream: #F4EEDC; --brown: #6B4A2E; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--cream); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+  h1 { margin: 0 0 4px; color: var(--maroon); }
+  h2 { margin: 36px 0 8px; color: var(--maroon); border-bottom: 2px solid var(--gold); padding-bottom: 4px; }
+  p.note { margin: 0 0 12px; max-width: 70ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+  figure { margin: 0; }
+  figcaption { font-size: 13px; color: var(--brown); margin-top: 4px; }
+  canvas { image-rendering: pixelated; display: block; }
+  .sheet { background: repeating-conic-gradient(#e7dfcb 0 25%, #f4eedc 0 50%) 0 0 / 16px 16px; padding: 8px; border: 1px solid #d4c7a6; }
+  table { border-collapse: collapse; }
+  td, th { padding: 6px 10px; border-bottom: 1px solid #d4c7a6; text-align: left; }
+  .sw { display: inline-block; width: 18px; height: 18px; vertical-align: middle; border: 1px solid var(--ink); }
+</style>
+</head>
+<body>
+<h1>Flappy Eagle sprites</h1>
+<p class="note">Step 1 for review. All art is original pixel art drawn at the game's 180×320 resolution and shown here scaled up.</p>
+
+<h2>Mock screens</h2>
+<div class="row">
+  <figure><canvas id="mockTitle" width="180" height="320" style="width:360px;max-width:100%"></canvas><figcaption>Title screen (animated)</figcaption></figure>
+  <figure><canvas id="mockPlay" width="180" height="320" style="width:360px;max-width:100%"></canvas><figcaption>Gameplay (animated scroll)</figcaption></figure>
+</div>
+
+<h2>Eagle</h2>
+<p class="note">Three wing frames (up, level, down) and the looping flap.</p>
+<div class="row" id="eagles"></div>
+
+<h2>Gasson tower</h2>
+<p class="note">Cap with gilded pinnacles, plus a body tile that repeats to any height. Hanging towers flip only the cap, so the windows stay upright.</p>
+<div class="row" id="towers"></div>
+
+<h2>Background and ground</h2>
+<div class="row" id="scenery"></div>
+
+<h2>UI</h2>
+<div class="row" id="ui"></div>
+
+<h2>Loss screens</h2>
+<p class="note">Shown after a player's second try. "Melted": the eagle sprawled under a collapsed sundae.</p>
+<div class="row" id="loss"></div>
+
+<h2>Contrast (WCAG)</h2>
+<table id="contrast"><tr><th>Pair</th><th></th><th>Ratio</th><th>AA</th></tr></table>
+
+<script src="sprites.js"></script>
+<script>
+const S = Sprites;
+const show = (parent, c, scale, caption, sheet = true) => {
+  const fig = document.createElement('figure');
+  const disp = S.canvas(c.width, c.height);
+  disp.getContext('2d').drawImage(c, 0, 0);
+  disp.style.width = c.width * scale + 'px';
+  if (sheet) disp.className = 'sheet';
+  fig.append(disp);
+  const cap = document.createElement('figcaption'); cap.textContent = caption; fig.append(cap);
+  document.getElementById(parent).append(fig);
+  return disp;
+};
+
+// sprite sheet
+S.eagle.forEach((e, i) => show('eagles', e, 6, ['Wing up', 'Wing level', 'Wing down'][i]));
+const flap = show('eagles', S.eagle[0], 6, 'Flap loop');
+show('towers', S.towerCap, 6, 'Cap');
+show('towers', S.towerBody, 6, 'Body tile');
+show('towers', S.towerCapFlip, 6, 'Cap (hanging)');
+show('scenery', S.background, 2, 'Quad background (tiles horizontally)', false);
+show('scenery', S.ground, 2, 'Brick walk (tiles horizontally)', false);
+show('ui', S.text('FLAPPY', { scale: 3, fg: S.C.gold, fg2: S.C.goldDark, outline: S.C.maroon, outline2: S.C.ink, shadow: S.C.brownDark }), 2, 'Title wordmark');
+show('ui', S.text('0123456789', { scale: 2, outline: S.C.ink }), 2, 'Score digits');
+show('ui', S.text('ABCDEFGHIJKLMNOPQRSTUVWXYZ !?-.:+/', { outline: S.C.ink }), 3, 'Pixel font');
+show('ui', S.button(84, 22, '1 PLAYER'), 3, 'Button');
+show('ui', S.button(84, 22, 'MULTIPLAYER', true), 3, 'Button (pressed)');
+show('ui', S.plusButton(), 3, 'Add player');
+show('ui', S.tapIcon, 4, 'Tap hint');
+const p = S.panel(120, 64), pg = p.getContext('2d');
+pg.drawImage(S.text('SCORE', { fg: S.C.maroon, outline: null }), 12, 12);
+pg.drawImage(S.text('BEST', { fg: S.C.maroon, outline: null }), 12, 34);
+const sc = S.text('12', { scale: 2, outline: S.C.ink }), bs = S.text('48', { scale: 2, outline: S.C.ink });
+pg.drawImage(sc, 108 - sc.width, 8); pg.drawImage(bs, 108 - bs.width, 30);
+show('ui', p, 3, 'Results panel');
+S.lossScenes.forEach(s => show('loss', s, 5, 'Melted (176×108)', false));
+
+// animated mocks
+const title = document.getElementById('mockTitle').getContext('2d');
+const play = document.getElementById('mockPlay').getContext('2d');
+const wordmark = [
+  S.text('FLAPPY', { scale: 3, fg: S.C.gold, fg2: S.C.goldDark, outline: S.C.maroon, outline2: S.C.ink, shadow: S.C.brownDark }),
+  S.text('EAGLE', { scale: 3, fg: S.C.gold, fg2: S.C.goldDark, outline: S.C.maroon, outline2: S.C.ink, shadow: S.C.brownDark }),
+];
+const btn1 = S.button(84, 22, '1 PLAYER'), btn2 = S.button(84, 22, 'MULTIPLAYER');
+const tapTxt = S.text('TAP TO PLAY', { outline: S.C.ink });
+const scoreTxt = S.text('12', { scale: 3, outline: S.C.ink });
+const groundY = S.H - S.GROUND_H;
+
+function scenery(g, bgX, gX) {
+  for (const o of [0, S.W]) g.drawImage(S.background, Math.floor(o - bgX), 0);
+  for (const o of [0, S.W]) g.drawImage(S.ground, Math.floor(o - gX), groundY);
+}
+
+let t = 0;
+function frame() {
+  t++;
+  const f = Math.floor(t / 6) % 4, wing = [0, 1, 2, 1][f];
+  const gX = (t * 1) % S.W, bgX = (t * 0.25) % S.W;
+
+  scenery(title, bgX, gX);
+  title.drawImage(wordmark[0], (S.W - wordmark[0].width) / 2, 34);
+  title.drawImage(wordmark[1], (S.W - wordmark[1].width) / 2, 64);
+  title.drawImage(S.eagle[wing], 77, 128 + Math.round(Math.sin(t / 10) * 3));
+  title.drawImage(S.tapIcon, 84, 160);
+  title.drawImage(tapTxt, (S.W - tapTxt.width) / 2, 178);
+  title.drawImage(btn1, 4, 222);
+  title.drawImage(btn2, 92, 222);
+
+  scenery(play, bgX, gX);
+  const tx = 120 - (t % 140);
+  for (const [x, gapTop] of [[tx, 92], [tx + 100, 120], [tx + 200, 80]]) {
+    S.drawTower(play, x, gapTop, true);
+    S.drawTower(play, x, gapTop + 76, false);
+  }
+  play.save();
+  play.translate(46, 150 + Math.round(Math.sin(t / 8) * 10));
+  play.rotate(Math.cos(t / 8) * 0.35);
+  play.drawImage(S.eagle[wing], -13, -8);
+  play.restore();
+  play.drawImage(scoreTxt, (S.W - scoreTxt.width) / 2, 16);
+
+  flap.getContext('2d').clearRect(0, 0, flap.width, flap.height);
+  flap.getContext('2d').drawImage(S.eagle[wing], 0, 0);
+  requestAnimationFrame(frame);
+}
+[title, play].forEach(g => g.imageSmoothingEnabled = false);
+frame();
+
+// contrast checks for the key text/background pairs
+const lum = hex => {
+  const [r, g, b] = hex.match(/\w\w/g).map(h => {
+    const c = parseInt(h, 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+[
+  ['Gold text on maroon button', S.C.gold, S.C.maroon],
+  ['Maroon text on cream panel', S.C.maroon, S.C.cream],
+  ['White text on ink outline', S.C.white, S.C.ink],
+  ['Maroon plus on gold button', S.C.maroon, S.C.gold],
+  ['Ink outline on brightest sky', S.C.ink, '#CFE7F2'],
+].forEach(([name, a, b]) => {
+  const v = ratio(a, b);
+  document.getElementById('contrast').insertAdjacentHTML('beforeend',
+    `<tr><td>${name}</td><td><span class="sw" style="background:${a}"></span> <span class="sw" style="background:${b}"></span></td><td>${v.toFixed(2)}:1</td><td>${v >= 4.5 ? 'Pass' : v >= 3 ? 'Large text / UI only' : 'Fail'}</td></tr>`);
+});
+</script>
+</body>
+</html>

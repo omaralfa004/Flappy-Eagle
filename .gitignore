@@ -1,0 +1,8 @@
+.DS_Store
+.claude/
+
+# Source renders and previews stay local; only the sprites the game loads are published.
+Loss screen renders/*
+!Loss screen renders/*-sprite-*.png
+Loss screen renders/*-preview.png
+Loss screen renders/baby-*

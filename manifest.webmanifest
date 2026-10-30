@@ -1,0 +1,15 @@
+{
+  "name": "Flappy Eagle",
+  "short_name": "Flappy Eagle",
+  "description": "A Boston College themed one-tap flyer for 1 to 10 players.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#3B2616",
+  "theme_color": "#3B2616",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

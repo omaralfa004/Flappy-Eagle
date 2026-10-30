@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3B2616">
+<meta name="description" content="Flappy Eagle: a Boston College themed one-tap flyer for 1 to 10 players.">
+<!-- iPhone Safari has no fullscreen API, so "Add to Home Screen" is how it goes full screen there -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flappy Eagle">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Flappy Eagle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --u: 2px; /* one game pixel in CSS pixels; set by fit() in game.js */
+    --ink: #2B1B12; --maroon: #8C2232; --maroonD: #5E1622; --maroonL: #A8394A;
+    --gold: #DBCCA4; --goldD: #B39C68; --cream: #F4EEDC; --brown: #6B4A2E;
+    --outline: var(--u) 0 var(--ink), calc(var(--u) * -1) 0 var(--ink), 0 var(--u) var(--ink), 0 calc(var(--u) * -1) var(--ink),
+               var(--u) var(--u) var(--ink), calc(var(--u) * -1) var(--u) var(--ink), var(--u) calc(var(--u) * -1) var(--ink), calc(var(--u) * -1) calc(var(--u) * -1) var(--ink);
+  }
+  html, body { margin: 0; height: 100%; background: #3B2616; overflow: hidden; overscroll-behavior: none; }
+  body { display: grid; place-items: center; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  #wrap { position: relative; width: calc(var(--u) * 180); height: calc(var(--u) * 320); }
+  #game { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  #ui { position: absolute; inset: 0; font-family: 'Silkscreen', ui-monospace, monospace; font-size: calc(var(--u) * 8); line-height: 1.25; color: var(--cream); }
+  .screen { position: absolute; inset: 0; }
+  .screen[hidden] { display: none; }
+  .dim { box-sizing: border-box; overflow-y: auto; touch-action: pan-y; display: flex; flex-direction: column; align-items: center;
+         gap: calc(var(--u) * 8); padding: calc(var(--u) * 16) calc(var(--u) * 8) 0; }
+  .center { justify-content: center; padding-bottom: calc(var(--u) * 16); }
+  h2 { margin: 0; font-weight: 400; font-size: calc(var(--u) * 14); color: var(--gold); text-shadow: var(--outline); text-align: center; outline: none; }
+  p { margin: 0; text-align: center; text-shadow: var(--outline); }
+
+  .btn { font: inherit; text-transform: uppercase; color: var(--gold); background: var(--maroon); border: 0; border-radius: 0; cursor: pointer;
+         min-height: calc(var(--u) * 22); padding: 0 calc(var(--u) * 6) calc(var(--u) * 2); margin: var(--u);
+         box-shadow: 0 0 0 var(--u) var(--ink), inset 0 var(--u) 0 var(--maroonL), inset 0 calc(var(--u) * -2) 0 var(--maroonD); }
+  .btn:active { transform: translateY(calc(var(--u) * 2)); padding-bottom: 0;
+                box-shadow: 0 0 0 var(--u) var(--ink), inset 0 var(--u) 0 var(--maroonL); }
+  .btn:focus-visible, .add:focus-visible { outline: var(--u) solid #fff; outline-offset: calc(var(--u) * 2); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 6); width: 100%; }
+
+  #endUI, #homeRow { position: absolute; left: 0; right: 0; top: calc(var(--u) * 290); display: flex; justify-content: center; pointer-events: none; }
+  #homeRow { top: calc(var(--u) * 256); }
+  #endUI[hidden], #overUI[hidden] { display: none; }
+  #endUI .btn, #overUI .btn { pointer-events: auto; }
+  #overUI { position: absolute; inset: 0; pointer-events: none; } /* taps between the buttons still retry */
+  /* on a dark loss screen the ink outline vanishes, so ring the button in gold */
+  #endUI.on-dark .btn { box-shadow: 0 0 0 var(--u) var(--ink), 0 0 0 calc(var(--u) * 2) var(--gold), inset 0 var(--u) 0 var(--maroonL), inset 0 calc(var(--u) * -2) 0 var(--maroonD); }
+  #endUI.on-dark .btn:active { box-shadow: 0 0 0 var(--u) var(--ink), 0 0 0 calc(var(--u) * 2) var(--gold), inset 0 var(--u) 0 var(--maroonL); }
+  #lossArt { position: absolute; image-rendering: pixelated; }
+
+  /* full screen toggle: bottom left, phones and tablets only, never during a flight */
+  #fsBtn { position: absolute; left: calc(var(--u) * 4); bottom: calc(var(--u) * 5); min-height: 0; width: calc(var(--u) * 20); height: calc(var(--u) * 20);
+           padding: 0 0 calc(var(--u) * 2); display: grid; place-items: center; }
+  #fsBtn:active { padding-bottom: 0; }
+  #fsBtn[hidden], #fsBtn .exit, #fsBtn.on .enter { display: none; }
+  #fsBtn.on .exit { display: block; }
+  #fsBtn svg { width: calc(var(--u) * 11); height: calc(var(--u) * 11); fill: var(--gold); shape-rendering: crispEdges; }
+  #fsTip { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); bottom: calc(var(--u) * 30); margin: 0; padding: calc(var(--u) * 5);
+           background: var(--cream); color: var(--ink); text-shadow: none; text-align: left; box-shadow: 0 0 0 var(--u) var(--ink), inset 0 0 0 var(--u) var(--brown); }
+  #fsTip[hidden] { display: none; }
+  #lossArt[hidden] { display: none; }
+
+  #titleUI .pair, #overUI .pair { position: absolute; left: calc(var(--u) * 4); right: calc(var(--u) * 4); top: calc(var(--u) * 222); width: auto; }
+
+  /* player cards: fixed size, fill left to right, then wrap to the next row */
+  #cards { display: grid; grid-template-columns: repeat(2, calc(var(--u) * 78)); grid-auto-rows: calc(var(--u) * 36); gap: calc(var(--u) * 7) calc(var(--u) * 6); }
+  .card { position: relative; box-sizing: border-box; display: flex; align-items: flex-end; padding: calc(var(--u) * 5);
+          background: var(--cream); box-shadow: 0 0 0 var(--u) var(--ink), inset 0 0 0 calc(var(--u) * 2) var(--brown); }
+  .num { position: absolute; left: calc(var(--u) * 3); top: calc(var(--u) * 3); min-width: calc(var(--u) * 11); height: calc(var(--u) * 11);
+         display: grid; place-items: center; box-shadow: 0 0 0 var(--u) var(--ink); }
+  .card input { width: 100%; min-width: 0; box-sizing: border-box; height: calc(var(--u) * 15); padding: 0 calc(var(--u) * 3);
+                font: inherit; text-transform: uppercase; color: var(--ink); background: #fff; border: 0; border-radius: 0;
+                box-shadow: inset 0 0 0 var(--u) var(--goldD); user-select: text; -webkit-user-select: text; }
+  .card input { font-size: max(16px, calc(var(--u) * 8)); } /* under 16px, iPhone Safari zooms in on focus */
+  .card input::placeholder { color: #6E6458; opacity: 1; }
+  .card input:focus { outline: var(--u) solid var(--maroon); }
+  .add { font: inherit; text-transform: uppercase; color: var(--gold); background: rgba(244, 238, 220, 0.12); cursor: pointer;
+         border: var(--u) dashed var(--gold); border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 3); text-shadow: var(--outline); }
+  .add[hidden] { display: none; }
+  .plus { width: calc(var(--u) * 14); height: calc(var(--u) * 14); background: var(--gold); box-shadow: 0 0 0 var(--u) var(--ink), inset 0 calc(var(--u) * -2) 0 var(--goldD);
+          background-image: linear-gradient(var(--maroon), var(--maroon)), linear-gradient(var(--maroon), var(--maroon));
+          background-repeat: no-repeat; background-position: center calc(50% - var(--u)); background-size: calc(var(--u) * 8) calc(var(--u) * 2), calc(var(--u) * 2) calc(var(--u) * 8); }
+  .footer { position: sticky; bottom: 0; margin-top: auto; align-self: stretch; margin-inline: calc(var(--u) * -8);
+            padding: calc(var(--u) * 10) calc(var(--u) * 8) calc(var(--u) * 8); background: linear-gradient(transparent, rgba(43, 27, 18, 0.92) 35%); }
+
+  .hint { color: var(--gold); font-size: calc(var(--u) * 7); }
+
+  #board { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: calc(var(--u) * 4); }
+  #board li { display: grid; grid-template-columns: calc(var(--u) * 14) calc(var(--u) * 13) 1fr auto; align-items: center; gap: calc(var(--u) * 4);
+              padding: calc(var(--u) * 3) calc(var(--u) * 5); background: var(--cream); color: var(--ink); box-shadow: 0 0 0 var(--u) var(--ink), inset 0 0 0 var(--u) var(--brown); }
+  #board li.first { background: var(--gold); box-shadow: 0 0 0 var(--u) var(--ink), inset 0 0 0 calc(var(--u) * 2) var(--maroon); }
+  #board .num { position: static; }
+  #board .score { font-size: calc(var(--u) * 10); color: var(--maroon); }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="180" height="320" role="img" aria-label="Flappy Eagle game"></canvas>
+  <canvas id="lossArt" role="img" hidden></canvas>
+  <div id="ui">
+    <section id="titleUI" class="screen" aria-label="Main menu">
+      <div class="pair">
+        <button class="btn" id="soloBtn">1 Player</button>
+        <button class="btn" id="multiBtn">Multiplayer</button>
+      </div>
+    </section>
+
+    <section id="setupUI" class="screen dim" hidden aria-labelledby="setupTitle">
+      <h2 id="setupTitle" tabindex="-1" data-focus>Players</h2>
+      <p class="hint" id="playerCount"></p>
+      <div id="cards">
+        <button class="add" id="addPlayer"><span class="plus" aria-hidden="true"></span>Add player</button>
+      </div>
+      <div class="footer pair">
+        <button class="btn" id="setupBack">Back</button>
+        <button class="btn" id="setupNext">Continue</button>
+      </div>
+    </section>
+
+    <section id="orderUI" class="screen dim center" hidden aria-labelledby="orderTitle">
+      <h2 id="orderTitle" tabindex="-1" data-focus>Player order?</h2>
+      <div class="pair">
+        <button class="btn" id="orderStandard">Standard</button>
+        <button class="btn" id="orderRandom">Random</button>
+      </div>
+      <p class="hint">Standard: list order.<br>Random: spin a wheel each turn.</p>
+      <button class="btn" id="orderBack">Back</button>
+    </section>
+
+    <div id="overUI" hidden aria-label="Game over options">
+      <div class="pair">
+        <button class="btn" id="overSolo">1 Player</button>
+        <button class="btn" id="overMulti">Multiplayer</button>
+      </div>
+      <div id="homeRow"><button class="btn" id="homeBtn">Home</button></div>
+    </div>
+
+    <div id="endUI" hidden>
+      <button class="btn" id="endBtn">End game</button>
+    </div>
+
+    <section id="resultsUI" class="screen dim" hidden aria-labelledby="resultsTitle">
+      <h2 id="resultsTitle" tabindex="-1" data-focus>Final scores</h2>
+      <p class="hint">Best of 2 tries</p>
+      <ol id="board"></ol>
+      <div class="footer pair">
+        <button class="btn" id="againBtn">Play again</button>
+        <button class="btn" id="menuBtn">Menu</button>
+      </div>
+    </section>
+
+    <!-- pixel icons: corners point out = go full screen, corners point in = leave it -->
+    <button class="btn" id="fsBtn" hidden aria-label="Enter full screen">
+      <svg class="enter" viewBox="0 0 11 11" aria-hidden="true"><path d="M0 0h4v2H2v2H0zM7 0h4v4H9V2H7zM0 7h2v2h2v2H0zM9 7h2v4H7V9h2z"/></svg>
+      <svg class="exit" viewBox="0 0 11 11" aria-hidden="true"><path d="M2 0h2v4H0V2h2zM7 0h2v2h2v2H7zM0 7h4v4H2V9H0zM7 7h4v2H9v2H7z"/></svg>
+    </button>
+    <p id="fsTip" hidden>To play full screen on iPhone: tap Share, then Add to Home Screen.</p>
+  </div>
+</div>
+<p id="status" class="sr-only" aria-live="polite"></p>
+<script src="sprites.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
